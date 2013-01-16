@@ -8,11 +8,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.http.client.ClientProtocolException;
 import org.json.JSONArray;
@@ -51,11 +47,14 @@ public class MetroSchedIntentService extends IntentService {
 		URL url = getURL(appWidgetId);
 		
 		// Fetch and parse data
-		List<Map<String, String>> resultMapList = requestAndParse(url);
+		String jsonString = getJSONSchedule(url);
+		parseJSONToDatabase(jsonString);
 		
-		long updateTimeMillis = Long.parseLong((resultMapList.get(0).get("end")));
+		List<Event> resultList = getEvents(3);
 		
-		buildUpdate(appWidgetId, resultMapList);
+		long updateTimeMillis = resultList.get(0).getEnd();
+		
+		buildUpdate(appWidgetId, resultList);
 		
 		// Create timer for next update
 		createAlarmTimer(this, appWidgetId, updateTimeMillis);
@@ -67,7 +66,7 @@ public class MetroSchedIntentService extends IntentService {
 	}
 	
 	// Build and deploy update to widget
-	public void buildUpdate(int widgetId, List<Map<String, String>> resultMapList) {
+	public void buildUpdate(int widgetId, List<Event> resultList) {
 		Log.d(MetrolukkariWidget.TAG, "Building");
 		RemoteViews view = new RemoteViews(getPackageName(), R.layout.widget);
 		
@@ -79,18 +78,19 @@ public class MetroSchedIntentService extends IntentService {
 
 		view.setOnClickPendingIntent(R.id.widgetlayout, pendingIntent);
 		
-		Iterator<Map<String, String>> i = resultMapList.iterator();
-		Map<String, String> resultMap;
+		String start, end, roomId, subject;
 		
-		String start, end;
+		int i = 0;
+		int[] textViews = MetrolukkariWidget.TEXTVIEWS;
 		
-		while(i.hasNext()) {
-			resultMap = i.next();
+		for(Event event : resultList) {
+			start = DateUtils.timeMillisToLocalReadable(event.getStart());
+			end = DateUtils.timeMillisToLocalReadable(event.getEnd());
+			roomId = event.getRoomId();
+			subject = event.getSubject();
 			
-			start = DateUtils.millisToLocalReadable(DateUtils.unixTimeStringToMillis(resultMap.get("start")));
-			end = DateUtils.millisToLocalReadable(DateUtils.unixTimeStringToMillis(resultMap.get("end")));
-			
-			view.setTextViewText(R.id.class1, start + " - " + end + " " + resultMap.get("subject"));
+			view.setTextViewText(textViews[i], start + " - " + end + " " + roomId + " " + subject);
+			i++;
 		}
 		
 		view.setTextViewText(R.id.date, "Updating...");
@@ -116,7 +116,7 @@ public class MetroSchedIntentService extends IntentService {
 		return url;
 	}
 	
-	public List<Map<String, String>> requestAndParse(URL url) {
+	public String getJSONSchedule(URL url) {
 		Log.d(MetrolukkariWidget.TAG, "Fetching & parsing");
 		HttpURLConnection urlConnection = null;
 
@@ -139,7 +139,7 @@ public class MetroSchedIntentService extends IntentService {
 				sb.append(line);
 			}
 			result = sb.toString();
-			Log.d(MetrolukkariWidget.TAG, result);
+			//Log.d(MetrolukkariWidget.TAG, result);
 		} catch(ClientProtocolException e) {
 			e.printStackTrace();
 		} catch(IOException e) {
@@ -149,43 +149,47 @@ public class MetroSchedIntentService extends IntentService {
 			urlConnection.disconnect();
 		}
 		
-		List<Map<String, String>> resultMapList = new ArrayList<Map<String, String>>();
-		
+		return result;
+	}
+	
+	public void parseJSONToDatabase(String jsonString) {
 		// Parse JSON here
 		try {
-			JSONObject jObject = new JSONObject(result);
+			JSONObject jObject = new JSONObject(jsonString);
 			JSONArray jArray = jObject.getJSONArray("events");
 			
-			for(int i=0; i<1; i++) {
+			for(int i=0; i<jArray.length(); i++) {
 				JSONObject item = jArray.getJSONObject(i);
-				Map<String, String> resultMap = new HashMap<String, String>();
 				
-				String start = item.getString("start");
-				String end = item.getString("end");
+				long start = item.getLong("start");
+				long end = item.getLong("end");
 				String subject = item.getString("subject");
 				String roomId = item.getString("roomid");
 				
-				resultMap.put("start", start);
-				resultMap.put("end", end);
-				resultMap.put("subject", subject);
-				resultMap.put("roomId", roomId);
-				
 				ScheduleDataSource dataSource = new ScheduleDataSource(getApplicationContext(), appWidgetId);
+				dataSource.open();
 				
-				dataSource.push(subject, Long.parseLong(start), Long.parseLong(end), roomId);
+				dataSource.push(subject, start, end, roomId);
 				
-				Log.d(MetrolukkariWidget.TAG, resultMap.toString());
-				
-				resultMapList.add(resultMap);
+				dataSource.close();
 			}
 			
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	public List<Event> getEvents(int limit) {
+		ScheduleDataSource dataSource = new ScheduleDataSource(getApplicationContext(), appWidgetId);
 		
+		dataSource.open();
 		
-		return resultMapList;
+		List<Event> events = dataSource.getUpcoming(limit);
+		
+		dataSource.close();
+		
+		return events;
 	}
 	
 	public void createAlarmTimer(Context ctx, int widgetId, long time) {

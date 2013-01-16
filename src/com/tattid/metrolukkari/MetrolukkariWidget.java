@@ -16,7 +16,7 @@ public class MetrolukkariWidget extends AppWidgetProvider {
 	public static final String METRO_ACTION_CLICK = "com.nikog.metrosched.widget.action.click";
 	public static final String METRO_ACTION_REFRESH = "com.tattid.metrolukkari.widget.action.WIDGET_UPDATE";
 	// Available textViews.
-	final static int[] textViews = { R.id.class1, R.id.class2, R.id.class3 };
+	public final static int[] TEXTVIEWS = { R.id.class1, R.id.class2, R.id.class3 };
 	// The URL to get data from. Group name will be appended to the end.
 	public static String URIString = "http://mob.metropolia.fi/lukkarit/rest/index.php?rt=index/groupSchedule/";
 
@@ -80,7 +80,18 @@ public class MetrolukkariWidget extends AppWidgetProvider {
 
 		for (int i = 0; i < appWidgetIdList.length; i++) {
 			widgetId = appWidgetIdList[i];
+			
+			// Cancel upcoming updates
 			alarmManager.cancel(MetroSchedIntentService.getSyncPendingIntent(context, widgetId));
+			
+			// Delete preferences
+			SharedPreferences.Editor prefs = context.getSharedPreferences(MetrolukkariConfig.PREFS_NAME, 0).edit();	
+			prefs.remove("group#" + widgetId);
+			
+			// Drop SQLite table
+			ScheduleDataSource dataSource = new ScheduleDataSource(context, widgetId);
+			dataSource.dropTable();
+			
 			
 			Log.d(TAG, "Deleting widget with id #" + widgetId);
 		}

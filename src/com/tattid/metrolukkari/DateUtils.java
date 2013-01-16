@@ -5,7 +5,7 @@ import java.util.Calendar;
 import java.util.TimeZone;
 
 public class DateUtils {
-	public static String millisToLocalReadable(long millis) {
+	public static String timeMillisToLocalReadable(long millis) {
 		SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
 		
 		Calendar calendar = Calendar.getInstance();
@@ -16,7 +16,21 @@ public class DateUtils {
 		return sdf.format(calendar.getTime());
 	}
 	
-	public static long unixTimeStringToMillis(String unixTime) {
-		return Long.parseLong(unixTime) * 1000L;
+	public static long unixTimeToTimeMillis(long unixTime) {
+		return unixTime * 1000L;
+	}
+	
+	public static long tomorrow() {
+		Calendar c = Calendar.getInstance();
+		
+		c.set(Calendar.HOUR_OF_DAY, 0);
+		c.set(Calendar.MINUTE, 0);
+		c.set(Calendar.SECOND, 0);
+		c.set(Calendar.MILLISECOND, 0);
+
+		// next day
+		c.add(Calendar.DAY_OF_MONTH, 1);
+		
+		return c.getTimeInMillis();
 	}
 }

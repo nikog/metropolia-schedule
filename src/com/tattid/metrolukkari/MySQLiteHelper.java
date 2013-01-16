@@ -3,6 +3,7 @@ package com.tattid.metrolukkari;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 public class MySQLiteHelper extends SQLiteOpenHelper {
 	public int widgetId;
@@ -25,6 +26,7 @@ public class MySQLiteHelper extends SQLiteOpenHelper {
 
 	@Override
 	public void onCreate(SQLiteDatabase database) {
+		Log.d(MetrolukkariWidget.TAG, "widgetId in SQLiteHelper is " + widgetId);
 		String DATABASE_CREATE = "create table "
 				+ TABLE_SCHEDULE + widgetId +"("
 				+ COLUMN_ID + " integer primary key autoincrement, "
@@ -37,7 +39,7 @@ public class MySQLiteHelper extends SQLiteOpenHelper {
 
 	@Override
 	public void onUpgrade(SQLiteDatabase database, int arg1, int arg2) {
-		database.execSQL("DROP TABLE IF EXISTS " + TABLE_SCHEDULE);
+		database.execSQL("DROP TABLE IF EXISTS " + TABLE_SCHEDULE + widgetId);
 		onCreate(database);
 	}
 	

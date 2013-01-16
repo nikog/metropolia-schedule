@@ -28,9 +28,11 @@ public class ScheduleDataSource {
 		dbHelper.close();
 	}
 	
-	public void deleteOld(long currentTimeMillis) {
-		String query = "DELETE * FROM " + MySQLiteHelper.TABLE_SCHEDULE
-				+ " WHERE " + MySQLiteHelper.COLUMN_END + " < " + currentTimeMillis;
+	public void deleteOld() {
+		long time = System.currentTimeMillis();
+		
+		String query = "DELETE * FROM " + MySQLiteHelper.TABLE_SCHEDULE + widgetId
+				+ " WHERE " + MySQLiteHelper.COLUMN_END + " < " + time;
 		Cursor cursor = database.rawQuery(query, null);
 	}
 	
@@ -45,7 +47,10 @@ public class ScheduleDataSource {
 	}
 	
 	public List<Event> getUpcoming(int limit) {
-		String query = "SELECT * FROM " + MySQLiteHelper.TABLE_SCHEDULE 
+		long time = System.currentTimeMillis();
+		
+		String query = "SELECT * FROM " + MySQLiteHelper.TABLE_SCHEDULE + widgetId
+				+ " WHERE " + MySQLiteHelper.COLUMN_END + " > "  + time
 				+ " ORDER BY " + MySQLiteHelper.COLUMN_ID + " ASC LIMIT " + limit;
 		Cursor cursor = database.rawQuery(query, null);
 		
@@ -67,9 +72,26 @@ public class ScheduleDataSource {
 		return cursor;
 	}
 	
-	public long getStart() {
-		Cursor cursor = getFirstRow();
+	public long first() {
+		long time = System.currentTimeMillis();
+		
+		String query = "SELECT * FROM " + MySQLiteHelper.TABLE_SCHEDULE 
+				+ " WHERE " + MySQLiteHelper.COLUMN_END + " > "  + time
+				+ " ORDER BY " + MySQLiteHelper.COLUMN_END + " ASC LIMIT 1";
+		Cursor cursor = database.rawQuery(query, null);
 		
 		return cursor.getLong(1);
+	}
+	
+	public long last() {
+		String query = "SELECT * FROM " + MySQLiteHelper.TABLE_SCHEDULE 
+				+ " ORDER BY " + MySQLiteHelper.COLUMN_END + " DESC LIMIT 1";
+		Cursor cursor = database.rawQuery(query, null);
+		
+		return cursor.getLong(1);
+	}
+	
+	public void dropTable() {
+		database.execSQL("DROP TABLE IF EXISTS " + MySQLiteHelper.TABLE_SCHEDULE + widgetId);
 	}
 }

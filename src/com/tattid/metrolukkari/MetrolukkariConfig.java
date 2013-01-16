@@ -40,6 +40,7 @@ public class MetrolukkariConfig extends PreferenceActivity {
 	// For now, back button will accept the settings and create the widget
 	@Override
 	public void onBackPressed() {
+		Log.d(MetrolukkariWidget.TAG, "Exiting config");
 		// Get default preferences from PreferenceActivity
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		String group = prefs.getString("group", null);
