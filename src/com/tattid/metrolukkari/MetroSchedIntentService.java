@@ -22,6 +22,8 @@ import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.RemoteViews;
@@ -43,16 +45,34 @@ public class MetroSchedIntentService extends IntentService {
 		Bundle extras = intent.getExtras();
 		this.appWidgetId = extras.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
 		
-		// Get URI from shared preferences
-		URL url = getURL(appWidgetId);
-		
-		// Fetch and parse data
-		String jsonString = getJSONSchedule(url);
-		parseJSONToDatabase(jsonString);
-		
 		List<Event> resultList = getEvents(3);
+		long updateTimeMillis = 0;
+		long minUpdateTimeMillis = System.currentTimeMillis() + 1800000L;
 		
-		long updateTimeMillis = resultList.get(0).getEnd();
+		if(resultList != null) {
+			updateTimeMillis = resultList.get(0).getEnd();
+		}
+
+		// If next event is tomorrow, fetch new data
+		if((resultList == null || resultList.get(0).getStart() > DateUtils.tomorrow())) {
+			if(isConnected()) {
+				// Get URI from shared preferences
+				URL url = getURL(appWidgetId);
+				
+				// Fetch and parse data
+				String jsonString = getJSONSchedule(url);
+				parseJSONToDatabase(jsonString);
+				
+				resultList = getEvents(3);
+
+				updateTimeMillis = resultList.get(0).getEnd();
+			}
+		}
+
+		// Minimum update interval is 30min
+		if(updateTimeMillis < minUpdateTimeMillis) {
+			updateTimeMillis = minUpdateTimeMillis;
+		}
 		
 		buildUpdate(appWidgetId, resultList);
 		
@@ -93,7 +113,7 @@ public class MetroSchedIntentService extends IntentService {
 			i++;
 		}
 		
-		view.setTextViewText(R.id.date, "Updating...");
+		view.setTextViewText(R.id.date, DateUtils.getFullDay(resultList.get(0).getStart()));
 		
 		AppWidgetManager manager = AppWidgetManager.getInstance(this);
 		
@@ -116,11 +136,24 @@ public class MetroSchedIntentService extends IntentService {
 		return url;
 	}
 	
+	public boolean isConnected() {
+		ConnectivityManager cm =
+		        (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+		 
+		NetworkInfo activeNetworkInfo = cm.getActiveNetworkInfo();
+		
+		return activeNetworkInfo != null && activeNetworkInfo.isConnectedOrConnecting();
+	}
+	
 	public String getJSONSchedule(URL url) {
 		Log.d(MetrolukkariWidget.TAG, "Fetching & parsing");
 		HttpURLConnection urlConnection = null;
 
 		String result = null;
+		
+		if(isConnected()) {
+			
+		}
 		
 		try {
 			urlConnection = (HttpURLConnection) url.openConnection();
@@ -158,6 +191,10 @@ public class MetroSchedIntentService extends IntentService {
 			JSONObject jObject = new JSONObject(jsonString);
 			JSONArray jArray = jObject.getJSONArray("events");
 			
+			ScheduleDataSource dataSource = new ScheduleDataSource(getApplicationContext(), appWidgetId);
+			dataSource.open();
+			dataSource.deleteOld();
+			
 			for(int i=0; i<jArray.length(); i++) {
 				JSONObject item = jArray.getJSONObject(i);
 				
@@ -165,14 +202,19 @@ public class MetroSchedIntentService extends IntentService {
 				long end = item.getLong("end");
 				String subject = item.getString("subject");
 				String roomId = item.getString("roomid");
+
+				start = DateUtils.unixTimeToTimeMillis(start);
+				end = DateUtils.unixTimeToTimeMillis(end);
 				
-				ScheduleDataSource dataSource = new ScheduleDataSource(getApplicationContext(), appWidgetId);
-				dataSource.open();
-				
-				dataSource.push(subject, start, end, roomId);
-				
-				dataSource.close();
+				if(end > DateUtils.dayAfterTomorrow()) {
+					break;
+				} else {
+					Log.d(MetrolukkariWidget.TAG, "Storing: " + subject + " from " + start + " to " + end + " at " + roomId);
+					dataSource.push(subject, start, end, roomId);
+				}
 			}
+			
+			dataSource.close();
 			
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
@@ -189,6 +231,8 @@ public class MetroSchedIntentService extends IntentService {
 		
 		dataSource.close();
 		
+		//Log.d(MetrolukkariWidget.TAG, "Got events " + events);
+		
 		return events;
 	}
 	
@@ -198,9 +242,9 @@ public class MetroSchedIntentService extends IntentService {
 		PendingIntent pendingIntent = PendingIntent.getBroadcast(ctx, widgetId, intent, PendingIntent.FLAG_NO_CREATE);
 
 		if (pendingIntent == null) {
-			time = time * 1000;
-			
 			pendingIntent = getSyncPendingIntent(ctx, widgetId);
+			
+			Log.d(MetrolukkariWidget.TAG, "Next update at " + DateUtils.timeMillisToLocalReadable(time));
 
 			AlarmManager alarmManager = (AlarmManager) ctx.getSystemService(ctx.ALARM_SERVICE);
 			alarmManager.set(AlarmManager.RTC, time, pendingIntent);

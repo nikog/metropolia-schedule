@@ -27,14 +27,6 @@ public class MySQLiteHelper extends SQLiteOpenHelper {
 	@Override
 	public void onCreate(SQLiteDatabase database) {
 		Log.d(MetrolukkariWidget.TAG, "widgetId in SQLiteHelper is " + widgetId);
-		String DATABASE_CREATE = "create table "
-				+ TABLE_SCHEDULE + widgetId +"("
-				+ COLUMN_ID + " integer primary key autoincrement, "
-				+ COLUMN_START + " integer, "
-				+ COLUMN_END + " integer, "
-				+ COLUMN_SUBJECT + " text, "
-				+ COLUMN_ROOMID + ");";
-		database.execSQL(DATABASE_CREATE);
 	}
 
 	@Override

@@ -50,6 +50,12 @@ public class MetrolukkariConfig extends PreferenceActivity {
 		SharedPreferences.Editor prefsEditor = prefs.edit();
 		prefsEditor.putString("group#" + widgetId, group);
 		prefsEditor.commit();
+		
+		// Create table for offline storage
+		ScheduleDataSource dataSource = new ScheduleDataSource(getApplicationContext(), widgetId);
+		dataSource.open();
+		dataSource.createTable();
+		dataSource.close();
 
 		// Launch widget
 		Intent resultValue = new Intent();

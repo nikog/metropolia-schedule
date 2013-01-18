@@ -87,10 +87,13 @@ public class MetrolukkariWidget extends AppWidgetProvider {
 			// Delete preferences
 			SharedPreferences.Editor prefs = context.getSharedPreferences(MetrolukkariConfig.PREFS_NAME, 0).edit();	
 			prefs.remove("group#" + widgetId);
+			prefs.commit();
 			
 			// Drop SQLite table
 			ScheduleDataSource dataSource = new ScheduleDataSource(context, widgetId);
+			dataSource.open();
 			dataSource.dropTable();
+			dataSource.close();
 			
 			
 			Log.d(TAG, "Deleting widget with id #" + widgetId);

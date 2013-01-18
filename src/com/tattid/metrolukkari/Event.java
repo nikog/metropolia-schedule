@@ -38,5 +38,10 @@ public class Event {
 	public void setRoomId(String roomId) {
 		this.roomId = roomId;
 	}
+
+	@Override
+	public String toString() {
+		return "Event [subject=" + subject + ", start=" + start + ", end=" + end + ", roomId=" + roomId + "]";
+	}
 	
 }

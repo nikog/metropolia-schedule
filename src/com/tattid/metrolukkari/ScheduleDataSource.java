@@ -8,6 +8,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 public class ScheduleDataSource {
 	private SQLiteDatabase database;
@@ -28,10 +29,23 @@ public class ScheduleDataSource {
 		dbHelper.close();
 	}
 	
+	public void createTable() {
+		Log.d(MetrolukkariWidget.TAG, "Creating table " + MySQLiteHelper.TABLE_SCHEDULE + widgetId);
+		
+		String DATABASE_CREATE = "create table if not exists "
+				+ MySQLiteHelper.TABLE_SCHEDULE + widgetId +"("
+				+ MySQLiteHelper.COLUMN_ID + " integer primary key autoincrement, "
+				+ MySQLiteHelper.COLUMN_SUBJECT + " text, "
+				+ MySQLiteHelper.COLUMN_START + " integer, "
+				+ MySQLiteHelper.COLUMN_END + " integer, "
+				+ MySQLiteHelper.COLUMN_ROOMID + " text);";
+		database.execSQL(DATABASE_CREATE);
+	}
+	
 	public void deleteOld() {
 		long time = System.currentTimeMillis();
 		
-		String query = "DELETE * FROM " + MySQLiteHelper.TABLE_SCHEDULE + widgetId
+		String query = "DELETE FROM " + MySQLiteHelper.TABLE_SCHEDULE + widgetId
 				+ " WHERE " + MySQLiteHelper.COLUMN_END + " < " + time;
 		Cursor cursor = database.rawQuery(query, null);
 	}
@@ -39,9 +53,9 @@ public class ScheduleDataSource {
 	public void push(String subject, long start, long end, String roomId) {
 		ContentValues values = new ContentValues();
 		values.put(MySQLiteHelper.COLUMN_SUBJECT, subject);
-		values.put(MySQLiteHelper.COLUMN_START, subject);
-		values.put(MySQLiteHelper.COLUMN_END, subject);
-		values.put(MySQLiteHelper.COLUMN_ROOMID, subject);
+		values.put(MySQLiteHelper.COLUMN_START, start);
+		values.put(MySQLiteHelper.COLUMN_END, end);
+		values.put(MySQLiteHelper.COLUMN_ROOMID, roomId);
 		
 		database.insert(MySQLiteHelper.TABLE_SCHEDULE + widgetId, null, values);
 	}
@@ -57,8 +71,13 @@ public class ScheduleDataSource {
 		List<Event> eventList = new ArrayList<Event>();
 		
 		cursor.moveToFirst();
+		
+		if(cursor.getCount() == 0) {
+			return null;
+		}
+		
 		do {
-			eventList.add(new Event(cursor.getString(0), cursor.getLong(1), cursor.getLong(2), cursor.getString(3)));
+			eventList.add(new Event(cursor.getString(1), cursor.getLong(2), cursor.getLong(3), cursor.getString(4)));
 		} while(cursor.moveToNext());
 				
 		return eventList;
