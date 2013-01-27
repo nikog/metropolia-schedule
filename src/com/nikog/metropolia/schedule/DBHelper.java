@@ -1,11 +1,11 @@
-package com.tattid.metrolukkari;
+package com.nikog.metropolia.schedule;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-public class MySQLiteHelper extends SQLiteOpenHelper {
+public class DBHelper extends SQLiteOpenHelper {
 	public int widgetId;
 	
 	public static final String TABLE_SCHEDULE = "schedule";
@@ -18,7 +18,7 @@ public class MySQLiteHelper extends SQLiteOpenHelper {
 	private static final String DATABASE_NAME = "schedule.db";
 	private static final int DATABASE_VERSION = 1;
 
-	public MySQLiteHelper(Context context, int widgetId) {
+	public DBHelper(Context context, int widgetId) {
 		super(context, DATABASE_NAME, null, DATABASE_VERSION);
 		this.widgetId = widgetId;
 		// TODO Auto-generated constructor stub
@@ -26,7 +26,7 @@ public class MySQLiteHelper extends SQLiteOpenHelper {
 
 	@Override
 	public void onCreate(SQLiteDatabase database) {
-		Log.d(MetrolukkariWidget.TAG, "widgetId in SQLiteHelper is " + widgetId);
+		Log.d(WidgetProvider.TAG, "widgetId in SQLiteHelper is " + widgetId);
 	}
 
 	@Override

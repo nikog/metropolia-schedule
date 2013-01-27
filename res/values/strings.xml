@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="hello">Enter group name:</string>
-    <string name="app_name">Metrolukkari</string>
+    <string name="app_name">Metropolia Schedules</string>
     <string name="cancel">Cancel</string>
     <string name="add">Add widget</string>
-    <string name="config_groupid_title">Group id</string>
-    <string name="config_groupid_subtitle">Example: \'to10\'</string>
+    <string name="config_group_title">Group id</string>
+    <string name="config_group_subtitle">Example: \'to10\'</string>
     <string name="config_textcolor_title">Textcolor</string>
     <string name="config_textcolor_subtitle">Example: \'#FFFFFF\' or \'black\'</string>
     <string name="widget_update">Tap to update</string>

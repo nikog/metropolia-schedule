@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appwidget-provider
   xmlns:android="http://schemas.android.com/apk/res/android"
-  android:configure="com.tattid.metrolukkari.MetrolukkariConfig"
+  android:configure="com.nikog.metropolia.schedule.ConfigurationActivity"
   android:minHeight="74dp"
   android:minWidth="250dp"
   android:updatePeriodMillis="0"

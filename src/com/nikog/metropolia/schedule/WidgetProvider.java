@@ -1,4 +1,4 @@
-package com.tattid.metrolukkari;
+package com.nikog.metropolia.schedule;
 
 import android.app.AlarmManager;
 import android.appwidget.AppWidgetManager;
@@ -10,11 +10,11 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.RemoteViews;
 
-public class MetrolukkariWidget extends AppWidgetProvider {
-	final static String TAG = "MetLuk";
+public class WidgetProvider extends AppWidgetProvider {
+	final static String TAG = "MetropoliaSchedule";
 
-	public static final String METRO_ACTION_CLICK = "com.nikog.metrosched.widget.action.click";
-	public static final String METRO_ACTION_REFRESH = "com.tattid.metrolukkari.widget.action.WIDGET_UPDATE";
+	public static final String METRO_ACTION_CLICK = "com.nikog.metropolia.schedule.widget.action.CLICK";
+	public static final String METRO_ACTION_REFRESH = "com.nikog.metropolia.schedule.widget.action.UPDATE";
 	// Available textViews.
 	public final static int[] TEXTVIEWS = { R.id.class1, R.id.class2, R.id.class3 };
 	// The URL to get data from. Group name will be appended to the end.
@@ -28,12 +28,12 @@ public class MetrolukkariWidget extends AppWidgetProvider {
 		for (int i = 0; i < appWidgetIds.length; i++) {
 			widgetId = appWidgetIds[i];
 			
-			SharedPreferences prefs = context.getSharedPreferences(MetrolukkariConfig.PREFS_NAME, 0);	
+			SharedPreferences prefs = context.getSharedPreferences(ConfigurationActivity.PREFS_NAME, 0);	
 			String group = prefs.getString("group#" + widgetId, "");
 			
 			// Update only if group has been set in preferences
 			if(!group.equals("")) {	
-				MetroSchedIntentService.startIntentService(context, widgetId);
+				UpdateService.startIntentService(context, widgetId);
 	
 				// Update widget (useless ?)
 				remoteView = new RemoteViews(context.getPackageName(), R.layout.widget);
@@ -82,15 +82,15 @@ public class MetrolukkariWidget extends AppWidgetProvider {
 			widgetId = appWidgetIdList[i];
 			
 			// Cancel upcoming updates
-			alarmManager.cancel(MetroSchedIntentService.getSyncPendingIntent(context, widgetId));
+			alarmManager.cancel(UpdateService.getSyncPendingIntent(context, widgetId));
 			
 			// Delete preferences
-			SharedPreferences.Editor prefs = context.getSharedPreferences(MetrolukkariConfig.PREFS_NAME, 0).edit();	
+			SharedPreferences.Editor prefs = context.getSharedPreferences(ConfigurationActivity.PREFS_NAME, 0).edit();	
 			prefs.remove("group#" + widgetId);
 			prefs.commit();
 			
 			// Drop SQLite table
-			ScheduleDataSource dataSource = new ScheduleDataSource(context, widgetId);
+			DBAdapter dataSource = new DBAdapter(context, widgetId);
 			dataSource.open();
 			dataSource.dropTable();
 			dataSource.close();

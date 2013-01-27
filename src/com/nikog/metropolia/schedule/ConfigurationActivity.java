@@ -1,4 +1,4 @@
-package com.tattid.metrolukkari;
+package com.nikog.metropolia.schedule;
 
 import android.appwidget.AppWidgetManager;
 import android.content.Context;
@@ -9,15 +9,10 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
-public class MetrolukkariConfig extends PreferenceActivity {
-	public static final String PREFS_NAME = "com.tattid.metrolukkari.metrolukkariconfig";
-
-	public static String METRO_ACTION_REFRESH = "com.tattid.metrolukkari.widget.action.WIDGET_UPDATE";
+public class ConfigurationActivity extends PreferenceActivity {
+	public static final String PREFS_NAME = "com.nikog.metropolia.schedule.widget.configuration";
 
 	int widgetId;
-
-	static String textColor = "white";
-	static String group = "to10";
 
 	/** Called when the activity is first created. */
 	@SuppressWarnings("deprecation")
@@ -40,7 +35,7 @@ public class MetrolukkariConfig extends PreferenceActivity {
 	// For now, back button will accept the settings and create the widget
 	@Override
 	public void onBackPressed() {
-		Log.d(MetrolukkariWidget.TAG, "Exiting config");
+		Log.d(WidgetProvider.TAG, "Exiting config");
 		// Get default preferences from PreferenceActivity
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		String group = prefs.getString("group", null);
@@ -52,7 +47,7 @@ public class MetrolukkariConfig extends PreferenceActivity {
 		prefsEditor.commit();
 		
 		// Create table for offline storage
-		ScheduleDataSource dataSource = new ScheduleDataSource(getApplicationContext(), widgetId);
+		DBAdapter dataSource = new DBAdapter(getApplicationContext(), widgetId);
 		dataSource.open();
 		dataSource.createTable();
 		dataSource.close();
@@ -69,8 +64,8 @@ public class MetrolukkariConfig extends PreferenceActivity {
 	}
 	
 	public void startIntentService(Context ctx, int widgetId) {
-		Log.d(MetrolukkariWidget.TAG, "Attempting to start service from config");
-		Intent serviceIntent = new Intent(ctx, MetroSchedIntentService.class);
+		Log.d(WidgetProvider.TAG, "Attempting to start service from config");
+		Intent serviceIntent = new Intent(ctx, UpdateService.class);
 		serviceIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId);
 		ctx.startService(serviceIntent);	
 	}

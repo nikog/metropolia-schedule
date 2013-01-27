@@ -1,4 +1,4 @@
-package com.tattid.metrolukkari;
+package com.nikog.metropolia.schedule;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;

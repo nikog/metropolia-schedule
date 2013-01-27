@@ -1,4 +1,4 @@
-package com.tattid.metrolukkari;
+package com.nikog.metropolia.schedule;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -28,18 +28,18 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.RemoteViews;
 
-public class MetroSchedIntentService extends IntentService {
+public class UpdateService extends IntentService {
 	
 	private int appWidgetId;
 	
-	public MetroSchedIntentService() {
+	public UpdateService() {
 		super("MetroSchedIntentService");
-		Log.d(MetrolukkariWidget.TAG, "UpdateService launched");
+		Log.d(WidgetProvider.TAG, "UpdateService launched");
 	}
 
 	@Override
 	protected void onHandleIntent(Intent intent) {
-		Log.d(MetrolukkariWidget.TAG, "Handling intent");
+		Log.d(WidgetProvider.TAG, "Handling intent");
 		
 		// Get widgetId from extras
 		Bundle extras = intent.getExtras();
@@ -83,11 +83,11 @@ public class MetroSchedIntentService extends IntentService {
 	
 	// Build and deploy update to widget
 	public void buildUpdate(int widgetId, List<Event> resultList) {
-		Log.d(MetrolukkariWidget.TAG, "Building");
+		Log.d(WidgetProvider.TAG, "Building");
 		RemoteViews view = new RemoteViews(getPackageName(), R.layout.widget);
 		
-		Intent intent = new Intent(this, MetrolukkariWidget.class);
-		intent.setAction(MetrolukkariWidget.METRO_ACTION_CLICK);
+		Intent intent = new Intent(this, WidgetProvider.class);
+		intent.setAction(WidgetProvider.METRO_ACTION_CLICK);
 		intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId);
 
 		PendingIntent pendingIntent = PendingIntent.getBroadcast(this, widgetId, intent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -97,7 +97,7 @@ public class MetroSchedIntentService extends IntentService {
 		String start, end, roomId, subject;
 		
 		int i = 0;
-		int[] textViews = MetrolukkariWidget.TEXTVIEWS;
+		int[] textViews = WidgetProvider.TEXTVIEWS;
 		
 		for(Event event : resultList) {
 			if(event.getStart() < DateUtils.tomorrow()) {
@@ -121,18 +121,18 @@ public class MetroSchedIntentService extends IntentService {
 	}
 	
 	public URL getURL(int widgetId) {
-		SharedPreferences prefs = getSharedPreferences(MetrolukkariConfig.PREFS_NAME, 0);	
+		SharedPreferences prefs = getSharedPreferences(ConfigurationActivity.PREFS_NAME, 0);	
 		String group = prefs.getString("group#" + widgetId, "");
 		
 		URL url = null;	
 		
 		try {
-			url = new URL(MetrolukkariWidget.URIString + group);
+			url = new URL(WidgetProvider.URIString + group);
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		}
 		
-		Log.d(MetrolukkariWidget.TAG, "Got URI " + url.toString());
+		Log.d(WidgetProvider.TAG, "Got URI " + url.toString());
 		return url;
 	}
 	
@@ -146,7 +146,7 @@ public class MetroSchedIntentService extends IntentService {
 	}
 	
 	public String getJSONSchedule(URL url) {
-		Log.d(MetrolukkariWidget.TAG, "Fetching & parsing");
+		Log.d(WidgetProvider.TAG, "Fetching & parsing");
 		HttpURLConnection urlConnection = null;
 
 		String result = null;
@@ -176,7 +176,7 @@ public class MetroSchedIntentService extends IntentService {
 		} catch(ClientProtocolException e) {
 			e.printStackTrace();
 		} catch(IOException e) {
-			Log.d(MetrolukkariWidget.TAG, "IOException: " + e.getMessage());
+			Log.d(WidgetProvider.TAG, "IOException: " + e.getMessage());
 			e.printStackTrace();
 		} finally {
 			urlConnection.disconnect();
@@ -191,7 +191,7 @@ public class MetroSchedIntentService extends IntentService {
 			JSONObject jObject = new JSONObject(jsonString);
 			JSONArray jArray = jObject.getJSONArray("events");
 			
-			ScheduleDataSource dataSource = new ScheduleDataSource(getApplicationContext(), appWidgetId);
+			DBAdapter dataSource = new DBAdapter(getApplicationContext(), appWidgetId);
 			dataSource.open();
 			dataSource.deleteOld();
 			
@@ -209,7 +209,7 @@ public class MetroSchedIntentService extends IntentService {
 				if(end > DateUtils.daysFromToday(3)) {
 					break;
 				} else {
-					Log.d(MetrolukkariWidget.TAG, "Storing: " + subject + " from " + start + " to " + end + " at " + roomId);
+					Log.d(WidgetProvider.TAG, "Storing: " + subject + " from " + start + " to " + end + " at " + roomId);
 					dataSource.push(subject, start, end, roomId);
 				}
 			}
@@ -223,7 +223,7 @@ public class MetroSchedIntentService extends IntentService {
 	}
 	
 	public List<Event> getEvents(int limit) {
-		ScheduleDataSource dataSource = new ScheduleDataSource(getApplicationContext(), appWidgetId);
+		DBAdapter dataSource = new DBAdapter(getApplicationContext(), appWidgetId);
 		
 		dataSource.open();
 		
@@ -238,24 +238,24 @@ public class MetroSchedIntentService extends IntentService {
 	
 	public void createAlarmTimer(Context ctx, int widgetId, long time) {
 		// Check for already running alarm timer
-		Intent intent = new Intent(ctx, MetroSchedIntentService.class);
+		Intent intent = new Intent(ctx, UpdateService.class);
 		PendingIntent pendingIntent = PendingIntent.getBroadcast(ctx, widgetId, intent, PendingIntent.FLAG_NO_CREATE);
 
 		if (pendingIntent == null) {
 			pendingIntent = getSyncPendingIntent(ctx, widgetId);
 			
-			Log.d(MetrolukkariWidget.TAG, "Next update at " + DateUtils.timeMillisToLocalReadable(time));
+			Log.d(WidgetProvider.TAG, "Next update at " + DateUtils.timeMillisToLocalReadable(time));
 
 			AlarmManager alarmManager = (AlarmManager) ctx.getSystemService(ctx.ALARM_SERVICE);
 			alarmManager.set(AlarmManager.RTC, time, pendingIntent);
 		} else {
-			Log.d(MetrolukkariWidget.TAG, "AlarmManager already running for widget instance #" + widgetId);
+			Log.d(WidgetProvider.TAG, "AlarmManager already running for widget instance #" + widgetId);
 		}
 	}
 	
 	// Returns synced pendingIndents for identifying
 	public static PendingIntent getSyncPendingIntent(Context ctx, int widgetId) {
-		Intent intentUpdate = new Intent(ctx, MetroSchedIntentService.class);
+		Intent intentUpdate = new Intent(ctx, UpdateService.class);
 		intentUpdate.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId);
 		PendingIntent pendingIntentUpdate = PendingIntent.getService(ctx, widgetId, intentUpdate, PendingIntent.FLAG_UPDATE_CURRENT);
 		
@@ -263,8 +263,8 @@ public class MetroSchedIntentService extends IntentService {
 	}
 	
 	public static void startIntentService(Context ctx, int widgetId) {
-		Log.d(MetrolukkariWidget.TAG, "Attempting to start service from provider");
-		Intent serviceIntent = new Intent(ctx, MetroSchedIntentService.class);
+		Log.d(WidgetProvider.TAG, "Attempting to start service from provider");
+		Intent serviceIntent = new Intent(ctx, UpdateService.class);
 		serviceIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId);
 		ctx.startService(serviceIntent);
 		

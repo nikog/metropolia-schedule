@@ -1,4 +1,4 @@
-package com.tattid.metrolukkari;
+package com.nikog.metropolia.schedule;
 
 public class Event {
 	private String subject;

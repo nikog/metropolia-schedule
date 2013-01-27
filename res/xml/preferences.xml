@@ -3,7 +3,7 @@
     <PreferenceCategory
         android:title="Data">
         <EditTextPreference
-            android:title="Group"
+            android:title="@string/config_group_title"
             android:key="group" />
     </PreferenceCategory>
     <PreferenceCategory 

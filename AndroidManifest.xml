@@ -1,30 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      package="com.tattid.metrolukkari"
-      android:versionCode="2"
-      android:versionName="2.0beta">
-    <uses-sdk android:minSdkVersion="7" />
+      package="com.nikog.metropolia.schedule"
+      android:versionCode="3"
+      android:versionName="2.0b">
+    <uses-sdk 
+        android:minSdkVersion="7" 
+        android:targetSdkVersion="17" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-    <application android:icon="@drawable/icon" android:label="@string/app_name">
+    <application 
+        android:icon="@drawable/icon" 
+        android:label="@string/app_name" 
+        android:allowBackup="true" >
 
-        <activity android:name="com.tattid.metrolukkari.MetrolukkariConfig" >
+        <activity 
+            android:name="com.nikog.metropolia.schedule.ConfigurationActivity" 
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>
         </activity>
          
-        <receiver android:name="com.tattid.metrolukkari.MetrolukkariWidget" >
+        <receiver android:name="com.tattid.metrolukkari.WidgetProvider" >
     		<intent-filter>
     			<action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
     			<action android:name="com.tattid.metrolukkari.widget.action.WIDGET_UPDATE" />
     		</intent-filter>
     		<meta-data android:name="android.appwidget.provider"
-    				android:resource="@xml/metrolukkari_widget_provider" />
+    				android:resource="@xml/metropoliaschedule_widgetprovider" />
     	</receiver>
     	
-        <service android:name="com.tattid.metrolukkari.MetroSchedIntentService" />
+        <service android:name="com.nikog.metropolia.schedule.UpdateService" />
 
     </application>
 </manifest>
