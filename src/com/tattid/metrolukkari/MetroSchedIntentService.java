@@ -47,6 +47,7 @@ public class MetroSchedIntentService extends IntentService {
 		
 		List<Event> resultList = getEvents(3);
 		long updateTimeMillis = 0;
+		// Current time + 30min
 		long minUpdateTimeMillis = System.currentTimeMillis() + 1800000L;
 		
 		if(resultList != null) {
@@ -78,11 +79,6 @@ public class MetroSchedIntentService extends IntentService {
 		
 		// Create timer for next update
 		createAlarmTimer(this, appWidgetId, updateTimeMillis);
-		
-		// Update widget
-		//AppWidgetManager widgetManager = AppWidgetManager.getInstance(this);
-		//RemoteViews remoteView = new RemoteViews(getPackageName(), R.layout.widget);
-		//widgetManager.updateAppWidget(appWidgetId, remoteView);
 	}
 	
 	// Build and deploy update to widget
@@ -104,12 +100,16 @@ public class MetroSchedIntentService extends IntentService {
 		int[] textViews = MetrolukkariWidget.TEXTVIEWS;
 		
 		for(Event event : resultList) {
-			start = DateUtils.timeMillisToLocalReadable(event.getStart());
-			end = DateUtils.timeMillisToLocalReadable(event.getEnd());
-			roomId = event.getRoomId();
-			subject = event.getSubject();
-			
-			view.setTextViewText(textViews[i], start + " - " + end + " " + roomId + " " + subject);
+			if(event.getStart() < DateUtils.tomorrow()) {
+				start = DateUtils.timeMillisToLocalReadable(event.getStart());
+				end = DateUtils.timeMillisToLocalReadable(event.getEnd());
+				roomId = event.getRoomId();
+				subject = event.getSubject();
+				
+				view.setTextViewText(textViews[i], start + " - " + end + " " + roomId + " " + subject);
+			} else {
+				view.setTextViewText(textViews[i], "");
+			}
 			i++;
 		}
 		
@@ -206,7 +206,7 @@ public class MetroSchedIntentService extends IntentService {
 				start = DateUtils.unixTimeToTimeMillis(start);
 				end = DateUtils.unixTimeToTimeMillis(end);
 				
-				if(end > DateUtils.dayAfterTomorrow()) {
+				if(end > DateUtils.daysFromToday(3)) {
 					break;
 				} else {
 					Log.d(MetrolukkariWidget.TAG, "Storing: " + subject + " from " + start + " to " + end + " at " + roomId);

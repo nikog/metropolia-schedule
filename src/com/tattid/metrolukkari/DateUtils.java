@@ -33,7 +33,7 @@ public class DateUtils {
 		
 		return c.getTimeInMillis();
 	}
-	public static long dayAfterTomorrow() {
+	public static long daysFromToday(int days) {
 		Calendar c = Calendar.getInstance();
 		
 		c.set(Calendar.HOUR_OF_DAY, 0);
@@ -42,7 +42,7 @@ public class DateUtils {
 		c.set(Calendar.MILLISECOND, 0);
 
 		// next day
-		c.add(Calendar.DAY_OF_MONTH, 4);
+		c.add(Calendar.DAY_OF_MONTH, days);
 		
 		return c.getTimeInMillis();
 	}
