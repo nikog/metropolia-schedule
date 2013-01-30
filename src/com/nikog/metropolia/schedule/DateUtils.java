@@ -55,4 +55,13 @@ public class DateUtils {
 		
 		return sdf.format(c.getTime());
 	}
+	
+	public static int getDay(long timeMillis) {
+		SimpleDateFormat sdf = new SimpleDateFormat("d");
+		
+		Calendar c = Calendar.getInstance();
+		c.setTimeInMillis(timeMillis);
+		
+		return Integer.parseInt(sdf.format(c.getTime()));
+	}
 }

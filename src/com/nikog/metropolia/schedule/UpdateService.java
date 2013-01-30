@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.http.client.ClientProtocolException;
@@ -75,6 +76,8 @@ public class UpdateService extends IntentService {
 			updateTimeMillis = minUpdateTimeMillis;
 		}
 		
+		resultList = trimEvents(resultList);
+		
 		buildUpdate(appWidgetId, resultList);
 		
 		// Create timer for next update
@@ -96,11 +99,19 @@ public class UpdateService extends IntentService {
 		
 		String start, end, roomId, subject;
 		
-		int i = 0;
 		int[] textViews = WidgetProvider.TEXTVIEWS;
 		
-		for(Event event : resultList) {
-			if(event.getStart() < DateUtils.tomorrow()) {
+		for(int i=0; i<textViews.length; i++) {
+			Log.d(WidgetProvider.TAG, resultList.toString());
+			Event event = null;
+			
+			try {
+				event = resultList.get(i);
+			} catch(IndexOutOfBoundsException e) {
+				event = null;
+			}
+			
+			if(event != null) {
 				start = DateUtils.timeMillisToLocalReadable(event.getStart());
 				end = DateUtils.timeMillisToLocalReadable(event.getEnd());
 				roomId = event.getRoomId();
@@ -110,7 +121,6 @@ public class UpdateService extends IntentService {
 			} else {
 				view.setTextViewText(textViews[i], "");
 			}
-			i++;
 		}
 		
 		view.setTextViewText(R.id.date, DateUtils.getFullDay(resultList.get(0).getStart()));
@@ -233,6 +243,27 @@ public class UpdateService extends IntentService {
 		
 		//Log.d(MetrolukkariWidget.TAG, "Got events " + events);
 		
+		return events;
+	}
+	
+	public List<Event> trimEvents(List<Event> events) {
+		if(events.size() < 1) {
+			return null;
+		}
+		int day = DateUtils.getDay(events.get(0).getStart());
+		int tDay;
+		
+		Iterator<Event> i = events.iterator();
+		
+		while(i.hasNext()) {
+			Event event = i.next();
+			tDay = DateUtils.getDay(event.getStart());
+			Log.d(WidgetProvider.TAG, "day " +tDay);
+			
+			if(tDay != day) {
+				i.remove();
+			}
+		}
 		return events;
 	}
 	
