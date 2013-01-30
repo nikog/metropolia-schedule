@@ -13,48 +13,30 @@
 		android:id="@+id/date"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:textColor="#FFFFFF"
 		android:textStyle="bold"
 		android:layout_weight="1"
 		android:layout_marginTop="0dp"
-		android:scrollHorizontally="true"
-		android:text="@string/app_name"/>
+		android:text="@string/app_name"
+		style="@style/widgetTextStyle"/>
   	<TextView
 		android:id="@+id/class1"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:textColor="#FFFFFF" 
 		android:layout_weight="1"
 		android:layout_marginTop="0dp"
-		android:ellipsize="end"
-		android:scrollHorizontally="true"/>
+		style="@style/widgetTextStyle"/>
   	<TextView
 		android:id="@+id/class2"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:textColor="#FFFFFF"
 		android:layout_weight="1"
 		android:layout_marginTop="0dp"
-		android:ellipsize="end"
-		android:scrollHorizontally="true"/>
+		style="@style/widgetTextStyle"/>
   	<TextView
 		android:id="@+id/class3"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:textColor="#FFFFFF" 
 		android:layout_weight="1"
 		android:layout_marginTop="0dp"
-		android:ellipsize="end"
-		android:scrollHorizontally="true"/>
-  	<!--
-  	<TextView
-		android:id="@+id/class4"
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:textColor="#FFFFFF" 
-		android:layout_weight="1"
-		android:layout_marginTop="2dp"
-		android:ellipsize="end"
-		android:scrollHorizontally="true"/>
-	-->
+		style="@style/widgetTextStyle"/>
 </LinearLayout>
