@@ -15,17 +15,17 @@
         android:allowBackup="true" >
 
         <activity 
-            android:name="com.nikog.metropolia.schedule.ConfigurationActivity" 
-            android:exported="false">
+            android:name="com.nikog.metropolia.schedule.ConfigurationActivity" >
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>
         </activity>
          
-        <receiver android:name="com.tattid.metrolukkari.WidgetProvider" >
+        <receiver 
+            android:name="com.nikog.metropolia.schedule.WidgetProvider" >
     		<intent-filter>
     			<action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-    			<action android:name="com.tattid.metrolukkari.widget.action.WIDGET_UPDATE" />
+    			<action android:name="com.nikog.metropolia.schedule.widget.action.WIDGET_UPDATE" />
     		</intent-filter>
     		<meta-data android:name="android.appwidget.provider"
     				android:resource="@xml/metropoliaschedule_widgetprovider" />
