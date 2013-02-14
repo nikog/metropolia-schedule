@@ -47,6 +47,9 @@ public class ConfigurationActivity extends PreferenceActivity implements OnShare
 			mGroupPreference = (EditTextPreference) findPreference("group");
 			
 			mGroupPreference.setSummary(group);	
+			
+	        PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(this);
+
 		}
 	}
 	
@@ -54,7 +57,7 @@ public class ConfigurationActivity extends PreferenceActivity implements OnShare
 	public void onPause() {
 		super.onPause();
 		
-		getPreferenceScreen().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(this);
+		PreferenceManager.getDefaultSharedPreferences(this).unregisterOnSharedPreferenceChangeListener(this);
 	}
 
 	// For now, back button will accept the settings and create the widget
