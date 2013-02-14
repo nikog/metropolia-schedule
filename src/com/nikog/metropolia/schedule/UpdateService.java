@@ -101,13 +101,17 @@ public class UpdateService extends IntentService {
 		
 		int[] textViews = WidgetProvider.TEXTVIEWS;
 		
+		Log.d(WidgetProvider.TAG, resultList.toString());
+		
+		int listSize = resultList.size();
+		
+		Event event;
+		
 		for(int i=0; i<textViews.length; i++) {
-			Log.d(WidgetProvider.TAG, resultList.toString());
-			Event event = null;
 			
-			try {
+			if(i < resultList.size()) {
 				event = resultList.get(i);
-			} catch(IndexOutOfBoundsException e) {
+			} else {
 				event = null;
 			}
 			
@@ -119,7 +123,7 @@ public class UpdateService extends IntentService {
 				
 				view.setTextViewText(textViews[i], start + " - " + end + " " + roomId + " " + subject);
 			} else {
-				view.setTextViewText(textViews[i], "");
+				view.setTextViewText(textViews[i], " ");
 			}
 		}
 		
@@ -205,18 +209,32 @@ public class UpdateService extends IntentService {
 			dataSource.open();
 			dataSource.deleteOld();
 			
+			long start, end;
+			String subject, roomId;
+			
+			int day = 0;
+			int prevDay = 0;
+			int dayCount = 0;
+			
 			for(int i=0; i<jArray.length(); i++) {
 				JSONObject item = jArray.getJSONObject(i);
 				
-				long start = item.getLong("start");
-				long end = item.getLong("end");
-				String subject = item.getString("subject");
-				String roomId = item.getString("roomid");
+				start = item.getLong("start");
+				end = item.getLong("end");
+				subject = item.getString("subject");
+				roomId = item.getString("roomid");
 
 				start = DateUtils.unixTimeToTimeMillis(start);
 				end = DateUtils.unixTimeToTimeMillis(end);
 				
-				if(end > DateUtils.daysFromToday(3)) {
+				day = DateUtils.getDay(start);
+				
+				if(day != prevDay) {
+					prevDay = day;
+					dayCount++;
+				}
+				
+				if(dayCount > 3) {
 					break;
 				} else {
 					Log.d(WidgetProvider.TAG, "Storing: " + subject + " from " + start + " to " + end + " at " + roomId);
