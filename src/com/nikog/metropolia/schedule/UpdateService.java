@@ -47,9 +47,9 @@ public class UpdateService extends IntentService {
 		this.appWidgetId = extras.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
 		
 		List<Event> resultList = getEvents(3);
-		long updateTimeMillis = 0;
-		// Current time + 30min
-		long minUpdateTimeMillis = System.currentTimeMillis() + 1800000L;
+		
+		// Default/minimum update time is 30 minutes from now
+		long updateTimeMillis = System.currentTimeMillis() + 1800000L;
 		
 		if(resultList != null) {
 			updateTimeMillis = resultList.get(0).getEnd();
@@ -70,12 +70,8 @@ public class UpdateService extends IntentService {
 				updateTimeMillis = resultList.get(0).getEnd();
 			}
 		}
-
-		// Minimum update interval is 30min
-		if(updateTimeMillis < minUpdateTimeMillis) {
-			updateTimeMillis = minUpdateTimeMillis;
-		}
 		
+		// Trim events that are not on the same day
 		resultList = trimEvents(resultList);
 		
 		buildUpdate(appWidgetId, resultList);
@@ -89,6 +85,7 @@ public class UpdateService extends IntentService {
 		Log.d(WidgetProvider.TAG, "Building");
 		RemoteViews view = new RemoteViews(getPackageName(), R.layout.widget);
 		
+		// Placeholder click action
 		Intent intent = new Intent(this, WidgetProvider.class);
 		intent.setAction(WidgetProvider.METRO_ACTION_CLICK);
 		intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId);
@@ -96,26 +93,18 @@ public class UpdateService extends IntentService {
 		PendingIntent pendingIntent = PendingIntent.getBroadcast(this, widgetId, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
 		view.setOnClickPendingIntent(R.id.widgetlayout, pendingIntent);
+		// ----------------------
 		
-		String start, end, roomId, subject;
-		
-		int[] textViews = WidgetProvider.TEXTVIEWS;
-		
-		Log.d(WidgetProvider.TAG, resultList.toString());
-		
+		String start, end, roomId, subject;		
+		int[] textViews = WidgetProvider.TEXTVIEWS;		
 		int listSize = resultList.size();
-		
 		Event event;
 		
 		for(int i=0; i<textViews.length; i++) {
 			
-			if(i < resultList.size()) {
+			if(i < listSize) {
 				event = resultList.get(i);
-			} else {
-				event = null;
-			}
-			
-			if(event != null) {
+				
 				start = DateUtils.timeMillisToLocalReadable(event.getStart());
 				end = DateUtils.timeMillisToLocalReadable(event.getEnd());
 				roomId = event.getRoomId();
@@ -219,13 +208,10 @@ public class UpdateService extends IntentService {
 			for(int i=0; i<jArray.length(); i++) {
 				JSONObject item = jArray.getJSONObject(i);
 				
-				start = item.getLong("start");
-				end = item.getLong("end");
+				start = DateUtils.unixTimeToTimeMillis(item.getLong("start"));
+				end = DateUtils.unixTimeToTimeMillis(item.getLong("end"));
 				subject = item.getString("subject");
 				roomId = item.getString("roomid");
-
-				start = DateUtils.unixTimeToTimeMillis(start);
-				end = DateUtils.unixTimeToTimeMillis(end);
 				
 				day = DateUtils.getDay(start);
 				
@@ -237,7 +223,7 @@ public class UpdateService extends IntentService {
 				if(dayCount > 3) {
 					break;
 				} else {
-					Log.d(WidgetProvider.TAG, "Storing: " + subject + " from " + start + " to " + end + " at " + roomId);
+					Log.d(WidgetProvider.TAG, "Caching: " + subject + " from " + start + " to " + end + " at " + roomId);
 					dataSource.push(subject, start, end, roomId);
 				}
 			}
@@ -253,13 +239,9 @@ public class UpdateService extends IntentService {
 	public List<Event> getEvents(int limit) {
 		DBAdapter dataSource = new DBAdapter(getApplicationContext(), appWidgetId);
 		
-		dataSource.open();
-		
-		List<Event> events = dataSource.getUpcoming(limit);
-		
+		dataSource.open();	
+		List<Event> events = dataSource.getUpcoming(limit);		
 		dataSource.close();
-		
-		//Log.d(MetrolukkariWidget.TAG, "Got events " + events);
 		
 		return events;
 	}
@@ -276,7 +258,6 @@ public class UpdateService extends IntentService {
 		while(i.hasNext()) {
 			Event event = i.next();
 			tDay = DateUtils.getDay(event.getStart());
-			Log.d(WidgetProvider.TAG, "day " +tDay);
 			
 			if(tDay != day) {
 				i.remove();
