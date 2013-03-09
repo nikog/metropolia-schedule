@@ -80,8 +80,14 @@ public class UpdateService extends IntentService {
 		createAlarmTimer(this, appWidgetId, updateTimeMillis);
 	}
 	
-	// Build and deploy update to widget
-	public void buildUpdate(int widgetId, List<Event> resultList) {
+
+	/**
+	 * Build and deploy updated view from the supplied event list.
+	 * 
+	 * @param widgetId Widget id.
+	 * @param eventList	List of Event-objects to deploy to the widget view.
+	 */
+	public void buildUpdate(int widgetId, List<Event> eventList) {
 		Log.d(WidgetProvider.TAG, "Building");
 		RemoteViews view = new RemoteViews(getPackageName(), R.layout.widget);
 		
@@ -95,34 +101,41 @@ public class UpdateService extends IntentService {
 		view.setOnClickPendingIntent(R.id.widgetlayout, pendingIntent);
 		// ----------------------
 		
-		String start, end, roomId, subject;		
+		String start, end, roomId, subject, viewText;		
 		int[] textViews = WidgetProvider.TEXTVIEWS;		
-		int listSize = resultList.size();
+		int listSize = eventList.size(); // 2
 		Event event;
 		
-		for(int i=0; i<textViews.length; i++) {
+		for(int i=0; i<textViews.length; i++) { // 3
+			viewText = "";
 			
-			if(i < listSize) {
-				event = resultList.get(i);
+			if(i < listSize) { // 0, 1,
+				event = eventList.get(i);
 				
 				start = DateUtils.timeMillisToLocalReadable(event.getStart());
 				end = DateUtils.timeMillisToLocalReadable(event.getEnd());
 				roomId = event.getRoomId();
 				subject = event.getSubject();
 				
-				view.setTextViewText(textViews[i], start + " - " + end + " " + roomId + " " + subject);
-			} else {
-				view.setTextViewText(textViews[i], " ");
+				viewText = start + " - " + end + " " + roomId + " " + subject;
 			}
+			
+			view.setTextViewText(textViews[i], viewText);
 		}
 		
-		view.setTextViewText(R.id.date, DateUtils.getFullDay(resultList.get(0).getStart()));
+		view.setTextViewText(R.id.date, DateUtils.getFullDay(eventList.get(0).getStart()));
 		
 		AppWidgetManager manager = AppWidgetManager.getInstance(this);
 		
 		manager.updateAppWidget(widgetId, view);
 	}
 	
+	/**
+	 * Generates valid URL from the hard coded URL plus group id from preferences
+	 * 
+	 * @param widgetId Widget id.
+	 * @return URL
+	 */
 	public URL getURL(int widgetId) {
 		SharedPreferences prefs = getSharedPreferences(ConfigurationActivity.PREFS_NAME, 0);	
 		String group = prefs.getString("group#" + widgetId, "");
@@ -139,6 +152,11 @@ public class UpdateService extends IntentService {
 		return url;
 	}
 	
+	/**
+	 * Check for network connectivity.
+	 * 
+	 * @return boolean
+	 */
 	public boolean isConnected() {
 		ConnectivityManager cm =
 		        (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -148,6 +166,12 @@ public class UpdateService extends IntentService {
 		return activeNetworkInfo != null && activeNetworkInfo.isConnectedOrConnecting();
 	}
 	
+	/**
+	 * Fetches supplied URL and returns the JSON response as String.
+	 * 
+	 * @param url URL with the url to request data from.
+	 * @return JSON-object in String format.
+	 */
 	public String getJSONSchedule(URL url) {
 		Log.d(WidgetProvider.TAG, "Fetching & parsing");
 		HttpURLConnection urlConnection = null;
@@ -188,6 +212,11 @@ public class UpdateService extends IntentService {
 		return result;
 	}
 	
+	/**
+	 * Parse JSON response String and cache three events of tree days to the database.
+	 * 
+	 * @param jsonString JSON-object in String.
+	 */
 	public void parseJSONToDatabase(String jsonString) {
 		// Parse JSON here
 		try {
@@ -236,6 +265,12 @@ public class UpdateService extends IntentService {
 		}
 	}
 	
+	/**
+	 * Get cached events from local storage.
+	 * 
+	 * @param limit Amount of events to get.
+	 * @return List containing Event objects.
+	 */
 	public List<Event> getEvents(int limit) {
 		DBAdapter dataSource = new DBAdapter(getApplicationContext(), appWidgetId);
 		
@@ -246,6 +281,12 @@ public class UpdateService extends IntentService {
 		return events;
 	}
 	
+	/**
+	 * Remove events not happening on the same day as the first event.
+	 * 
+	 * @param events List containing the Event objects.
+	 * @return Trimmed list.
+	 */
 	public List<Event> trimEvents(List<Event> events) {
 		if(events.size() < 1) {
 			return null;
@@ -266,6 +307,13 @@ public class UpdateService extends IntentService {
 		return events;
 	}
 	
+	/**
+	 * Schedule next widget update.
+	 * 
+	 * @param ctx Application context.
+	 * @param widgetId Widget id.
+	 * @param time Time in milliseconds that alarm should go off.
+	 */
 	public void createAlarmTimer(Context ctx, int widgetId, long time) {
 		// Check for already running alarm timer
 		Intent intent = new Intent(ctx, UpdateService.class);
@@ -283,7 +331,13 @@ public class UpdateService extends IntentService {
 		}
 	}
 	
-	// Returns synced pendingIndents for identifying
+	/**
+	 * Returns synchronized pendingIntents for launching the UpdateService.
+	 * 
+	 * @param ctx Application context.
+	 * @param widgetId Widget id.
+	 * @return PendingIntent for launching UpdateService.
+	 */
 	public static PendingIntent getSyncPendingIntent(Context ctx, int widgetId) {
 		Intent intentUpdate = new Intent(ctx, UpdateService.class);
 		intentUpdate.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId);
@@ -292,12 +346,17 @@ public class UpdateService extends IntentService {
 		return pendingIntentUpdate;
 	}
 	
+	/**
+	 * Starts UpdateService and immediately calls onHandleIntent.
+	 * 
+	 * @param ctx Application context.
+	 * @param widgetId Widget id.
+	 */
 	public static void startIntentService(Context ctx, int widgetId) {
 		Log.d(WidgetProvider.TAG, "Attempting to start service from provider");
 		Intent serviceIntent = new Intent(ctx, UpdateService.class);
 		serviceIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId);
-		ctx.startService(serviceIntent);
-		
+		ctx.startService(serviceIntent);	
 	}
 
 }
