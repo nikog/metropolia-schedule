@@ -5,9 +5,25 @@
         <EditTextPreference
             android:title="@string/config_group_title"
             android:key="group" />
+        <!--<EditTextPreference
+            android:title="@string/config_cache_size"
+            android:key="cache_size" />
+        <EditTextPreference
+            android:title="@string/config_cache_freshness"
+            android:key="cache_freshness" />-->
     </PreferenceCategory>
+    
     <PreferenceCategory 
         android:title="Look">
+        <EditTextPreference
+            android:title="@string/config_font_size"
+            android:key="font_size" />
+        <EditTextPreference
+            android:title="@string/config_font_color"
+            android:key="font_color" />
+        <EditTextPreference
+            android:title="@string/config_font_shadow_color"
+            android:key="font_shadow_color" />
         
     </PreferenceCategory>
 
