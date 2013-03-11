@@ -50,15 +50,11 @@ public class UpdateService extends IntentService {
 		
 		List<Event> resultList = getEvents(3);
 		
-		// Default/minimum update time is 30 minutes from now
-		long updateTimeMillis = System.currentTimeMillis() + 1800000L;
+		// Default/minimum update time is 24 hours from now
+		long updateTimeMillis = System.currentTimeMillis() + 86400000L;
 		
-		if(resultList != null) {
-			updateTimeMillis = resultList.get(0).getEnd();
-		}
-
-		// If next event is tomorrow, fetch new data
-		if((resultList == null || resultList.get(0).getStart() > DateUtils.tomorrow())) {
+		// Next event is tomorrow or no events are in cache
+		if((resultList.size() == 0 || resultList.get(0).getStart() > DateUtils.tomorrow())) {
 			if(isConnected()) {
 				// Get URI from shared preferences
 				URL url = getURL(appWidgetId);
@@ -192,8 +188,8 @@ public class UpdateService extends IntentService {
 	 */
 	public String getJSONSchedule(URL url) {
 		Log.d(WidgetProvider.TAG, "Fetching & parsing");
+		
 		HttpURLConnection urlConnection = null;
-
 		String result = null;
 		
 		if(isConnected()) {
@@ -306,8 +302,8 @@ public class UpdateService extends IntentService {
 	 * @return Trimmed list.
 	 */
 	public List<Event> trimEvents(List<Event> events) {
-		if(events.size() < 1) {
-			return null;
+		if(events.size() == 0) {
+			return events;
 		}
 		int day = DateUtils.getDay(events.get(0).getStart());
 		int tDay;
