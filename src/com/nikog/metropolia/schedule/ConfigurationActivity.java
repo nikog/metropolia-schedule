@@ -41,7 +41,7 @@ public class ConfigurationActivity extends PreferenceActivity implements OnShare
 		super.onResume();
 		
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-		String group = prefs.getString("group", null);
+		String group = prefs.getString("group", "No group selected.");
 		
 		if(group != null) {
 			mGroupPreference = (EditTextPreference) findPreference("group");
@@ -104,4 +104,6 @@ public class ConfigurationActivity extends PreferenceActivity implements OnShare
 			mGroupPreference.setSummary(sharedPreferences.getString(key, null));
 		}
 	}
+	
+	
 }
