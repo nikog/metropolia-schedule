@@ -83,6 +83,8 @@ public class UpdateService extends IntentService {
 		
 		// Create timer for next update
 		createAlarmTimer(this, appWidgetId, updateTimeMillis);
+		
+		Logger.logCatToSDCard();
 	}
 	
 
