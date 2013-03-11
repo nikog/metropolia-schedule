@@ -32,6 +32,7 @@ import android.widget.RemoteViews;
 public class UpdateService extends IntentService {
 	
 	private int appWidgetId;
+	private String[] errorTitle;
 	
 	public UpdateService() {
 		super("MetroSchedIntentService");
@@ -41,6 +42,7 @@ public class UpdateService extends IntentService {
 	@Override
 	protected void onHandleIntent(Intent intent) {
 		Log.d(WidgetProvider.TAG, "Handling intent");
+		errorTitle = new String[3];
 		
 		// Get widgetId from extras
 		Bundle extras = intent.getExtras();
@@ -66,9 +68,16 @@ public class UpdateService extends IntentService {
 				parseJSONToDatabase(jsonString);
 				
 				resultList = getEvents(3);
-
-				updateTimeMillis = resultList.get(0).getEnd();
 			}
+		}
+		
+		if(resultList.size() > 0) {
+			updateTimeMillis = resultList.get(0).getEnd();
+		} else {
+			errorTitle = new String[3];
+			errorTitle[0] = "No schedules found";
+			errorTitle[1] = "Group doesn't exist or it's a long holiday";
+			errorTitle[2] = "Updating in 24 hours";
 		}
 		
 		// Trim events that are not on the same day
@@ -120,10 +129,19 @@ public class UpdateService extends IntentService {
 				viewText = start + " - " + end + " " + roomId + " " + subject;
 			}
 			
+			Log.d(WidgetProvider.TAG, "Set row " + i + " to \"" + viewText + "\"");
+			
 			view.setTextViewText(textViews[i], viewText);
 		}
 		
-		view.setTextViewText(R.id.date, DateUtils.getFullDay(eventList.get(0).getStart()));
+		String title;
+		if(listSize <= 0) {
+			title = errorTitle[0];
+		} else {
+			title = DateUtils.getFullDay(eventList.get(0).getStart());
+		}
+		
+		view.setTextViewText(R.id.date, title);
 		
 		AppWidgetManager manager = AppWidgetManager.getInstance(this);
 		
