@@ -12,9 +12,9 @@ import android.util.Log;
 
 public class DBAdapter {
 	private SQLiteDatabase database;
-	private DBHelper dbHelper;
+	private final DBHelper dbHelper;
 	
-	private int widgetId;
+	private final int widgetId;
 	
 	public DBAdapter(Context ctx, int widgetId) {
 		this.widgetId = widgetId;
@@ -73,7 +73,7 @@ public class DBAdapter {
 		cursor.moveToFirst();
 		
 		if(cursor.getCount() == 0) {
-			return null;
+			return eventList;
 		}
 		
 		do {
