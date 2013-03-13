@@ -43,11 +43,9 @@ public class DBAdapter {
 	}
 	
 	public void deleteOld() {
-		long time = System.currentTimeMillis();
+		Log.d(WidgetProvider.TAG, "Deleting cache");
 		
-		String query = "DELETE FROM " + DBHelper.TABLE_SCHEDULE + widgetId
-				+ " WHERE " + DBHelper.COLUMN_END + " < " + time;
-		Cursor cursor = database.rawQuery(query, null);
+		database.delete(DBHelper.TABLE_SCHEDULE + widgetId, null, null);
 	}
 	
 	public void push(String subject, long start, long end, String roomId) {
@@ -65,7 +63,7 @@ public class DBAdapter {
 		
 		String query = "SELECT * FROM " + DBHelper.TABLE_SCHEDULE + widgetId
 				+ " WHERE " + DBHelper.COLUMN_END + " > "  + time
-				+ " ORDER BY " + DBHelper.COLUMN_ID + " ASC LIMIT " + limit;
+				+ " ORDER BY " + DBHelper.COLUMN_START + " ASC LIMIT " + limit;
 		Cursor cursor = database.rawQuery(query, null);
 		
 		List<Event> eventList = new ArrayList<Event>();
